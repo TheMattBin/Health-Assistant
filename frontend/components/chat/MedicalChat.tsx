@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, ComponentType } from "react";
 import { useRouter } from "next/router";
 import styles from "./MedicalChat.module.css";
 
@@ -8,7 +8,11 @@ interface ChatMessage {
   fileName?: string;
 }
 
-export default function MedicalChat() {
+interface MedicalChatProps {
+  LogoutButton?: ComponentType;
+}
+
+export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -75,8 +79,25 @@ export default function MedicalChat() {
     <div className={styles.container}>
       {/* Left panel: Chat history */}
       <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <h2 className={styles.sidebarTitle}>🩺 MedAI Chat</h2>
+        <div
+          className={styles.sidebarHeader}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <h2
+            className={styles.sidebarTitle}
+            style={{
+              margin: 0,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            🩺 MedAI Chat
+            {LogoutButton && <LogoutButton />}
+          </h2>
         </div>
         <div className={styles.sidebarHistory}>
           <h4 className={styles.sidebarHistoryTitle}>History</h4>

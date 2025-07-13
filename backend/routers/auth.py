@@ -7,7 +7,7 @@ from typing import Optional
 
 SECRET_KEY = "your-secret-key"  # Change this in production!
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 6
 
 router = APIRouter()
 

@@ -17,15 +17,10 @@ model = AutoModelForImageTextToText.from_pretrained(
 )
 processor = AutoProcessor.from_pretrained(model_id)
 
-@router.post("/vlm-query")
-def vlm_query(
-    image_file: UploadFile = File(...),
-    query: str = Form(...)
-):
+def run_vlm(image: Image.Image, query: str) -> str:
     """
-    Accepts an image and a text query, runs the VLM model, and returns the generated response.
+    Internal utility to run MedGemma VLM on a PIL image and text query.
     """
-    image = Image.open(io.BytesIO(image_file.file.read()))
     messages = [
         {"role": "system", "content": [{"type": "text", "text": "You are an expert radiologist."}]},
         {"role": "user", "content": [
@@ -42,4 +37,14 @@ def vlm_query(
         generation = model.generate(**inputs, max_new_tokens=200, do_sample=False)
         generation = generation[0][input_len:]
     decoded = processor.decode(generation, skip_special_tokens=True)
-    return {"result": decoded}
+    return decoded
+
+# Optionally keep the /vlm-query endpoint for direct use, but main use is internal
+@router.post("/vlm-query")
+def vlm_query(
+    image_file: UploadFile = File(...),
+    query: str = Form(...)
+):
+    image = Image.open(io.BytesIO(image_file.file.read()))
+    result = run_vlm(image, query)
+    return {"result": result}

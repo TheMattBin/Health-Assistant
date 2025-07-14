@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import ChatHistoryPanel from "./ChatHistoryPanel";
 import ChatMainPanel from "./ChatMainPanel";
 import { v4 as uuidv4 } from "uuid";
+import styles from "./MedicalChat.module.css";
 
 interface ChatMessage {
   sender: "user" | "ai";
@@ -147,14 +148,14 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
   const activeChat = chats.find((chat) => chat.id === activeChatId);
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: "#f7f8fa" }}>
+    <div className={styles.container}>
       <ChatHistoryPanel
         chats={chats.map(({ id, title, created_at }) => ({ id, title, created_at }))}
         activeChatId={activeChatId}
         onSelect={handleSelectChat}
         onNewChat={handleNewChat}
       />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
         {LogoutButton && (
           <div style={{ position: "absolute", top: 18, right: 24, zIndex: 10 }}>
             <LogoutButton />

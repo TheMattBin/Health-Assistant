@@ -1,7 +1,16 @@
+
 .container {
   display: flex;
   height: 100vh;
-  background: #f7f8fa;
+  min-height: 100vh;
+  width: 100vw;
+  background: #181a20;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
 }
 
 .sidebar {
@@ -63,12 +72,18 @@
   color: #b0b3b8;
 }
 
+
+/* Main chat panel modern dark style */
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: #181a20;
+  color: #f5f6fa;
+  min-width: 0;
+  position: relative;
 }
+
 
 .chatArea {
   flex: 1;
@@ -77,72 +92,79 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  background: #181a20;
 }
+
 
 .chatMessageRow {
   display: flex;
   margin-bottom: 10px;
 }
-
 .chatMessageRowUser {
   justify-content: flex-end;
 }
-
 .chatMessageRowAI {
   justify-content: flex-start;
 }
 
+
 .chatBubble {
-  background: #f1f8e9;
-  color: #222;
-  padding: 14px 18px;
+  background: #23272f;
+  color: #f5f6fa;
+  padding: 16px 20px;
   border-radius: 18px;
   max-width: 60%;
   font-size: 16px;
-  box-shadow: 0 2px 8px #c8e6c9;
+  box-shadow: 0 2px 8px #181a20;
   border-bottom-right-radius: 18px;
   border-bottom-left-radius: 4px;
   word-break: break-word;
+  transition: background 0.2s;
 }
-
 .chatBubbleUser {
-  background: #e0f7fa;
-  box-shadow: 0 2px 8px #b2ebf2;
+  background: #1976d2;
+  color: #fff;
+  box-shadow: 0 2px 8px #1976d2;
   border-bottom-right-radius: 4px;
   border-bottom-left-radius: 18px;
 }
 
+
 .chatFile {
   font-size: 12px;
-  color: #888;
+  color: #b0b3b8;
   margin-top: 6px;
 }
+
 
 .inputBar {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 18px 24px;
-  border-top: 1px solid #eee;
-  background: #fafbfc;
+  border-top: 1px solid #23272f;
+  background: #23272f;
 }
-
 .inputText {
   flex: 1;
   padding: 14px 16px;
   border-radius: 18px;
-  border: 1px solid #ccc;
+  border: 1px solid #333;
   font-size: 16px;
   outline: none;
-  background: #fff;
+  background: #181a20;
+  color: #f5f6fa;
+  transition: border 0.2s;
 }
-
+.inputText:focus {
+  border: 1.5px solid #1976d2;
+}
 .inputFile {
   display: none;
 }
-
 .attachButton {
-  background: #e0f7fa;
+  background: #1976d2;
+  color: #fff;
   border: none;
   border-radius: 50%;
   width: 40px;
@@ -153,12 +175,12 @@
   cursor: pointer;
   font-size: 22px;
   margin-right: 4px;
+  transition: background 0.2s;
 }
-
 .attachButton:disabled {
   cursor: not-allowed;
+  background: #444;
 }
-
 .sendButton {
   background: #1976d2;
   color: #fff;
@@ -168,11 +190,10 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 8px #90caf9;
+  box-shadow: 0 2px 8px #1976d2;
   transition: background 0.2s;
 }
-
 .sendButton:disabled {
   cursor: not-allowed;
-  background: #b0bec5;
+  background: #444;
 }

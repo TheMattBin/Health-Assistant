@@ -1,195 +1,175 @@
-import React, { useEffect, useRef, useState, ComponentType } from "react";
-import { useRouter } from "next/router";
-import styles from "./MedicalChat.module.css";
+import React, { useEffect, useState } from "react";
+import ChatHistoryPanel from "./ChatHistoryPanel";
+import ChatMainPanel from "./ChatMainPanel";
+import { v4 as uuidv4 } from "uuid";
 
 interface ChatMessage {
   sender: "user" | "ai";
   text: string;
   fileName?: string;
+  timestamp?: string;
+}
+
+interface ChatSession {
+  id: string;
+  title: string;
+  created_at: string;
+  messages: ChatMessage[];
 }
 
 interface MedicalChatProps {
-  LogoutButton?: ComponentType;
+  LogoutButton?: React.ComponentType;
 }
 
 export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
-  const router = useRouter();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [chats, setChats] = useState<ChatSession[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Fetch chat history on mount
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
-    }
-  }, [router]);
+    fetch("http://localhost:8000/chat/history")
+      .then((res) => res.json())
+      .then((data: ChatMessage[]) => {
+        // Group messages into sessions (for demo, one session)
+        const sessionId = uuidv4();
+        setChats([
+          {
+            id: sessionId,
+            title: data[0]?.text?.slice(0, 20) || "New Chat",
+            created_at: data[0]?.timestamp || new Date().toISOString(),
+            messages: data,
+          },
+        ]);
+        setActiveChatId(sessionId);
+      });
+  }, []);
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const handleSelectChat = (id: string) => {
+    setActiveChatId(id);
+  };
+
+  const handleNewChat = () => {
+    const newId = uuidv4();
+    setChats((prev) => [
+      ...prev,
+      {
+        id: newId,
+        title: "New Chat",
+        created_at: new Date().toISOString(),
+        messages: [],
+      },
+    ]);
+    setActiveChatId(newId);
+  };
 
   const handleSend = async () => {
-    if (!input && !file) return;
+    if ((!input && !file) || !activeChatId) return;
     setLoading(true);
-    setMessages((prev) => [
-      ...prev,
-      { sender: "user", text: input, fileName: file?.name },
-    ]);
+    const userMsg: ChatMessage = {
+      sender: "user",
+      text: input,
+      fileName: file?.name,
+      timestamp: new Date().toISOString(),
+    };
+    setChats((prev) =>
+      prev.map((chat) =>
+        chat.id === activeChatId
+          ? { ...chat, messages: [...chat.messages, userMsg] }
+          : chat
+      )
+    );
     try {
       const form = new FormData();
       form.append("question", input);
       if (file) form.append("file", file);
       const res = await fetch("http://localhost:8000/chat/ask", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         body: form,
       });
+      let aiMsg: ChatMessage;
       if (res.ok) {
         const data = await res.json();
-        setMessages((prev) => [
-          ...prev,
-          { sender: "ai", text: data.result },
-        ]);
+        aiMsg = {
+          sender: "ai",
+          text: data.result,
+          timestamp: new Date().toISOString(),
+        };
       } else {
-        setMessages((prev) => [
-          ...prev,
-          { sender: "ai", text: "Error: Unable to get response from AI." },
-        ]);
+        aiMsg = {
+          sender: "ai",
+          text: "Error: Unable to get response from AI.",
+          timestamp: new Date().toISOString(),
+        };
       }
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === activeChatId
+            ? { ...chat, messages: [...chat.messages, aiMsg] }
+            : chat
+        )
+      );
+      // Save both messages to backend
+      await fetch("http://localhost:8000/chat/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userMsg),
+      });
+      await fetch("http://localhost:8000/chat/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(aiMsg),
+      });
     } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { sender: "ai", text: "Network error." },
-      ]);
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === activeChatId
+            ? {
+                ...chat,
+                messages: [
+                  ...chat.messages,
+                  { sender: "ai", text: "Network error.", timestamp: new Date().toISOString() },
+                ],
+              }
+            : chat
+        )
+      );
     } finally {
       setInput("");
       setFile(null);
       setLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
+  const activeChat = chats.find((chat) => chat.id === activeChatId);
+
   return (
-    <div className={styles.container}>
-      {/* Left panel: Chat history */}
-      <aside className={styles.sidebar}>
-        <div
-          className={styles.sidebarHeader}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <h2
-            className={styles.sidebarTitle}
-            style={{
-              margin: 0,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            🩺 MedAI Chat
-            {LogoutButton && <LogoutButton />}
-          </h2>
-        </div>
-        <div className={styles.sidebarHistory}>
-          <h4 className={styles.sidebarHistoryTitle}>History</h4>
-          <ul className={styles.sidebarHistoryList}>
-            {messages
-              .filter((m) => m.sender === "user")
-              .map((msg, idx) => (
-                <li key={idx} className={styles.sidebarHistoryItem}>
-                  <div className={styles.sidebarHistoryUser}>You</div>
-                  <div className={styles.sidebarHistoryText}>{msg.text}</div>
-                  {msg.fileName && (
-                    <div className={styles.sidebarHistoryFile}>
-                      📎 {msg.fileName}
-                    </div>
-                  )}
-                </li>
-              ))}
-          </ul>
-        </div>
-      </aside>
-      {/* Main chat panel */}
-      <main className={styles.main}>
-        <div className={styles.chatArea}>
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={
-                styles.chatMessageRow +
-                " " +
-                (msg.sender === "user"
-                  ? styles.chatMessageRowUser
-                  : styles.chatMessageRowAI)
-              }
-            >
-              <div
-                className={
-                  styles.chatBubble +
-                  " " +
-                  (msg.sender === "user" ? styles.chatBubbleUser : "")
-                }
-              >
-                {msg.text}
-                {msg.fileName && (
-                  <div className={styles.chatFile}>📎 {msg.fileName}</div>
-                )}
-              </div>
-            </div>
-          ))}
-          <div ref={chatEndRef} />
-        </div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }}
-          className={styles.inputBar}
-        >
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your question..."
-            className={styles.inputText}
-            disabled={loading}
-            autoFocus
-          />
-          <input
-            type="file"
-            accept=".pdf,image/*"
-            ref={fileInputRef}
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className={styles.inputFile}
-            disabled={loading}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className={styles.attachButton}
-            disabled={loading}
-            title="Attach file"
-          >
-            📎
-          </button>
-          <button
-            type="submit"
-            disabled={loading || (!input && !file)}
-            className={styles.sendButton}
-          >
-            {loading ? "Sending..." : "Send"}
-          </button>
-        </form>
-      </main>
+    <div style={{ display: "flex", height: "100vh", background: "#f7f8fa" }}>
+      <ChatHistoryPanel
+        chats={chats.map(({ id, title, created_at }) => ({ id, title, created_at }))}
+        activeChatId={activeChatId}
+        onSelect={handleSelectChat}
+        onNewChat={handleNewChat}
+      />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        {LogoutButton && (
+          <div style={{ position: "absolute", top: 18, right: 24, zIndex: 10 }}>
+            <LogoutButton />
+          </div>
+        )}
+        <ChatMainPanel
+          messages={activeChat?.messages || []}
+          input={input}
+          setInput={setInput}
+          file={file}
+          setFile={setFile}
+          loading={loading}
+          onSend={handleSend}
+        />
+      </div>
     </div>
   );
 }

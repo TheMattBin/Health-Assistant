@@ -6,3 +6,5 @@ python-multipart
 PyMuPDF
 python-jose
 pdf2image
+accelerate
+transformers

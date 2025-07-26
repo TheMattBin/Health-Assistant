@@ -1,6 +1,5 @@
 from fastapi import FastAPI
-from routers import auth
-#, health_data, chat, file_upload, model_api
+from routers import auth, health_data, chat, file_upload, model_api, chat_history
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -19,6 +18,7 @@ app.add_middleware(
 # Modular routers
 app.include_router(auth.router, prefix="/auth")
 # app.include_router(health_data.router, prefix="/health")
-# app.include_router(chat.router, prefix="/chat")
+app.include_router(chat.router, prefix="/chat")
 # app.include_router(file_upload.router, prefix="/upload")
 # app.include_router(model_api.router, prefix="/model")
+app.include_router(chat_history.router, prefix="/chat")

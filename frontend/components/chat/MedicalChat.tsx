@@ -155,22 +155,20 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
         onSelect={handleSelectChat}
         onNewChat={handleNewChat}
       />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
-        {LogoutButton && (
-          <div style={{ position: "absolute", top: 18, right: 24, zIndex: 10 }}>
-            <LogoutButton />
-          </div>
-        )}
-        <ChatMainPanel
-          messages={activeChat?.messages || []}
-          input={input}
-          setInput={setInput}
-          file={file}
-          setFile={setFile}
-          loading={loading}
-          onSend={handleSend}
-        />
-      </div>
+      <ChatMainPanel
+        messages={activeChat?.messages || []}
+        input={input}
+        setInput={setInput}
+        file={file}
+        setFile={setFile}
+        loading={loading}
+        onSend={handleSend}
+      />
+      {LogoutButton && (
+        <div style={{ position: "absolute", top: 18, right: 24, zIndex: 10 }}>
+          <LogoutButton />
+        </div>
+      )}
     </div>
   );
 }

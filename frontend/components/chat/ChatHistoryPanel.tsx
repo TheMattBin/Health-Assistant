@@ -1,4 +1,6 @@
+
 import React from "react";
+import styles from "./MedicalChat.module.css";
 
 interface ChatHistoryPanelProps {
   chats: { id: string; title: string; created_at: string }[];
@@ -9,16 +11,16 @@ interface ChatHistoryPanelProps {
 
 export default function ChatHistoryPanel({ chats, activeChatId, onSelect, onNewChat }: ChatHistoryPanelProps) {
   return (
-    <aside style={{ width: 260, background: "#23272f", color: "#fff", borderRight: "1px solid #222", display: "flex", flexDirection: "column", padding: 0 }}>
-      <div style={{ padding: 24, borderBottom: "1px solid #333", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: 1 }}>🩺 MedAI Chat</h2>
+    <aside className={styles.sidebar}>
+      <div className={styles.sidebarHeader} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <h2 className={styles.sidebarTitle}>🩺 MedAI Chat</h2>
         <button onClick={onNewChat} title="New Chat" style={{ background: "#e0f7fa", border: "none", borderRadius: "50%", width: 32, height: 32, fontSize: 20, cursor: "pointer", marginLeft: 8 }}>+</button>
       </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
-        <h4 style={{ color: "#b0b3b8", fontWeight: 500, margin: "0 0 12px 0" }}>History</h4>
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+      <div className={styles.sidebarHistory}>
+        <h4 className={styles.sidebarHistoryTitle}>History</h4>
+        <ul className={styles.sidebarHistoryList}>
           {chats.map(chat => (
-            <li key={chat.id} style={{ marginBottom: 18 }}>
+            <li key={chat.id} className={styles.sidebarHistoryItem}>
               <button
                 onClick={() => onSelect(chat.id)}
                 style={{

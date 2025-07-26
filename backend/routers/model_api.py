@@ -1,10 +1,16 @@
-from fastapi import APIRouter, UploadFile, File, Form
-from typing import Optional
-from PIL import Image
+import os
 import io
+import base64
+from typing import Optional
+from dotenv import load_dotenv
+
+from PIL import Image
 import torch
 from transformers import AutoProcessor, AutoModelForImageTextToText
-import base64
+from fastapi import APIRouter, UploadFile, File, Form
+
+load_dotenv()
+access_token = os.getenv("HF_TOKEN")
 
 router = APIRouter()
 

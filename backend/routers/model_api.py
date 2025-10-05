@@ -23,16 +23,19 @@ model = AutoModelForImageTextToText.from_pretrained(
 )
 processor = AutoProcessor.from_pretrained(model_id)
 
-def run_vlm(image: Image.Image, query: str) -> str:
+def run_vlm(image: Image.Image = None, query: str = "") -> str:
     """
     Internal utility to run MedGemma VLM on a PIL image and text query.
+    Can handle both text-only and text+image queries.
     """
+    # Build user content based on whether we have an image
+    user_content = [{"type": "text", "text": query}]
+    if image:
+        user_content.append({"type": "image", "image": image})
+
     messages = [
         {"role": "system", "content": [{"type": "text", "text": "You are an expert radiologist."}]},
-        {"role": "user", "content": [
-            {"type": "text", "text": query},
-            {"type": "image", "image": image}
-        ]}
+        {"role": "user", "content": user_content}
     ]
     inputs = processor.apply_chat_template(
         messages, add_generation_prompt=True, tokenize=True,

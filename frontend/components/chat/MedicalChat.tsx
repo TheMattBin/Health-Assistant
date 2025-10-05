@@ -29,22 +29,45 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch chat history on mount
+  // Fetch chat sessions on mount
   useEffect(() => {
-    fetch("http://localhost:8000/chat/history")
+    fetch("http://localhost:8000/chat/sessions")
       .then((res) => res.json())
-      .then((data: ChatMessage[]) => {
-        // Group messages into sessions (for demo, one session)
-        const sessionId = uuidv4();
-        setChats([
-          {
-            id: sessionId,
-            title: data[0]?.text?.slice(0, 20) || "New Chat",
-            created_at: data[0]?.timestamp || new Date().toISOString(),
-            messages: data,
-          },
-        ]);
-        setActiveChatId(sessionId);
+      .then(async (sessions: { id: string; title: string; created_at: string }[]) => {
+        if (sessions.length === 0) {
+          // Create initial session if none exist
+          const response = await fetch("http://localhost:8000/chat/sessions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: "New Chat" }),
+          });
+          const result = await response.json();
+          const newSession = {
+            id: result.session_id,
+            title: "New Chat",
+            created_at: new Date().toISOString(),
+            messages: [],
+          };
+          setChats([newSession]);
+          setActiveChatId(newSession.id);
+        } else {
+          // Load messages for each session
+          const sessionsWithMessages = await Promise.all(
+            sessions.map(async (session) => {
+              const response = await fetch(`http://localhost:8000/chat/sessions/${session.id}`);
+              const sessionData = await response.json();
+              return {
+                ...session,
+                messages: sessionData.messages || [],
+              };
+            })
+          );
+          setChats(sessionsWithMessages);
+          setActiveChatId(sessionsWithMessages[0].id);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load sessions:", error);
       });
   }, []);
 
@@ -52,18 +75,25 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
     setActiveChatId(id);
   };
 
-  const handleNewChat = () => {
-    const newId = uuidv4();
-    setChats((prev) => [
-      ...prev,
-      {
-        id: newId,
+  const handleNewChat = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/chat/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "New Chat" }),
+      });
+      const result = await response.json();
+      const newSession = {
+        id: result.session_id,
         title: "New Chat",
         created_at: new Date().toISOString(),
         messages: [],
-      },
-    ]);
-    setActiveChatId(newId);
+      };
+      setChats((prev) => [...prev, newSession]);
+      setActiveChatId(newSession.id);
+    } catch (error) {
+      console.error("Failed to create new session:", error);
+    }
   };
 
   const handleSend = async () => {
@@ -86,11 +116,18 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
       const form = new FormData();
       form.append("question", input);
       if (file) form.append("file", file);
+      // Create a timeout controller
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
       const res = await fetch("http://localhost:8000/chat/ask", {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         body: form,
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
       let aiMsg: ChatMessage;
       if (res.ok) {
         const data = await res.json();
@@ -100,9 +137,11 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
           timestamp: new Date().toISOString(),
         };
       } else {
+        const errorText = await res.text();
+        console.error("Backend error:", res.status, errorText);
         aiMsg = {
           sender: "ai",
-          text: "Error: Unable to get response from AI.",
+          text: `Error: Unable to get response from AI. Status: ${res.status}`,
           timestamp: new Date().toISOString(),
         };
       }
@@ -113,18 +152,37 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
             : chat
         )
       );
-      // Save both messages to backend
-      await fetch("http://localhost:8000/chat/history", {
+      // Save both messages to the active session
+      await fetch(`http://localhost:8000/chat/sessions/${activeChatId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userMsg),
       });
-      await fetch("http://localhost:8000/chat/history", {
+      await fetch(`http://localhost:8000/chat/sessions/${activeChatId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(aiMsg),
       });
-    } catch (err) {
+
+      // Update chat title if this is the first message
+      const activeChat = chats.find(chat => chat.id === activeChatId);
+      if (activeChat && activeChat.messages.length === 0) {
+        const updatedTitle = userMsg.text.slice(0, 20) + (userMsg.text.length > 20 ? "..." : "");
+        setChats(prev => prev.map(chat =>
+          chat.id === activeChatId
+            ? { ...chat, title: updatedTitle }
+            : chat
+        ));
+      }
+    } catch (err: any) {
+      console.error("Network error:", err);
+      let errorMessage = "Network error.";
+      if (err.name === 'AbortError') {
+        errorMessage = "Request timed out. The AI model is taking too long to respond. Please try again.";
+      } else if (err.message) {
+        errorMessage = `Network error: ${err.message}`;
+      }
+
       setChats((prev) =>
         prev.map((chat) =>
           chat.id === activeChatId
@@ -132,7 +190,7 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
                 ...chat,
                 messages: [
                   ...chat.messages,
-                  { sender: "ai", text: "Network error.", timestamp: new Date().toISOString() },
+                  { sender: "ai", text: errorMessage, timestamp: new Date().toISOString() },
                 ],
               }
             : chat

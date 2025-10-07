@@ -231,6 +231,7 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
         activeChatId={activeChatId}
         onSelect={handleSelectChat}
         onNewChat={handleNewChat}
+        LogoutButton={LogoutButton}
       />
       <ChatMainPanel
         messages={activeChat?.messages || []}
@@ -241,11 +242,6 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
         loading={loading}
         onSend={handleSend}
       />
-      {LogoutButton && (
-        <div style={{ position: "absolute", top: 18, right: 24, zIndex: 10 }}>
-          <LogoutButton />
-        </div>
-      )}
     </div>
   );
 }

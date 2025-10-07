@@ -1,11 +1,12 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
-from typing import Optional
-from pdf2image import convert_from_bytes
-from PIL import Image
 import io
+from PIL import Image
+from pdf2image import convert_from_bytes
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+
 from routers.model_api import run_vlm
 from routers.chat_history import get_user_id
 from utils.file_storage import save_uploaded_file
+
 
 router = APIRouter()
 

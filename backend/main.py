@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers import auth, health_data, chat, file_upload, model_api, chat_history, oauth2
+from routers import auth, chat, chat_history, oauth2
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles

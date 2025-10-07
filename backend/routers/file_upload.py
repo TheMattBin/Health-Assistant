@@ -1,9 +1,9 @@
-from fastapi import APIRouter, UploadFile, File, Depends
-from typing import List
 import io
 import base64
-from pdf2image import convert_from_bytes
 from PIL import Image
+from pdf2image import convert_from_bytes
+from fastapi import APIRouter, UploadFile, File, Depends
+
 from routers.chat_history import get_user_id
 from utils.file_storage import save_uploaded_file
 

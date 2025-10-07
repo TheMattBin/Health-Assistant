@@ -1,13 +1,11 @@
 import os
 import io
-import base64
-from typing import Optional
-from dotenv import load_dotenv
-
 from PIL import Image
+from dotenv import load_dotenv
+from fastapi import APIRouter, UploadFile, File, Form
+
 import torch
 from transformers import AutoProcessor, AutoModelForImageTextToText
-from fastapi import APIRouter, UploadFile, File, Form
 
 load_dotenv()
 access_token = os.getenv("HF_TOKEN")

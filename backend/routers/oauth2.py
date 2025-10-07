@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from fastapi.responses import RedirectResponse
-from authlib.integrations.starlette_client import OAuth
-from starlette.config import Config
-from jose import JWTError, jwt
-from datetime import datetime, timedelta
 import os
 from typing import Optional
+from datetime import datetime, timedelta
+
+from jose import jwt
+from authlib.integrations.starlette_client import OAuth
+from starlette.config import Config
+
+from fastapi import APIRouter, HTTPException, status, Request
+from fastapi.responses import RedirectResponse
 
 router = APIRouter()
 

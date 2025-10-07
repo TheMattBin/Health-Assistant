@@ -1,8 +1,8 @@
-from fastapi import APIRouter, UploadFile, File
-from typing import List
 import io
 import base64
+from typing import List
 from pdf2image import convert_from_bytes
+from fastapi import APIRouter, UploadFile, File
 
 router = APIRouter()
 

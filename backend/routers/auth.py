@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from datetime import datetime, timedelta
-from typing import Optional
 import os
+from jose import JWTError, jwt
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import APIRouter, Depends, HTTPException
 
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")

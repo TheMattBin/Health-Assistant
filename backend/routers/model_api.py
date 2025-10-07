@@ -14,7 +14,6 @@ access_token = os.getenv("HF_TOKEN")
 
 router = APIRouter()
 
-# Load model and processor once at startup
 model_id = "google/medgemma-4b-it"
 model = AutoModelForImageTextToText.from_pretrained(
     model_id,
@@ -24,11 +23,6 @@ model = AutoModelForImageTextToText.from_pretrained(
 processor = AutoProcessor.from_pretrained(model_id)
 
 def run_vlm(image: Image.Image = None, query: str = "") -> str:
-    """
-    Internal utility to run MedGemma VLM on a PIL image and text query.
-    Can handle both text-only and text+image queries.
-    """
-    # Build user content based on whether we have an image
     user_content = [{"type": "text", "text": query}]
     if image:
         user_content.append({"type": "image", "image": image})
@@ -48,7 +42,6 @@ def run_vlm(image: Image.Image = None, query: str = "") -> str:
     decoded = processor.decode(generation, skip_special_tokens=True)
     return decoded
 
-# Optionally keep the /vlm-query endpoint for direct use, but main use is internal
 @router.post("/vlm-query")
 def vlm_query(
     image_file: UploadFile = File(...),

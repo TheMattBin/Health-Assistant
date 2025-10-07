@@ -7,12 +7,10 @@ export default function Login() {
   const router = useRouter();
 
   useEffect(() => {
-    // Handle OAuth2 callback
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
     if (token) {
       localStorage.setItem('token', token);
-      // Remove token from URL
       window.history.replaceState({}, document.title, window.location.pathname);
       router.push('/');
     }
@@ -21,14 +19,12 @@ export default function Login() {
   const handleGoogleLogin = () => {
     setError("");
     setLoading(true);
-    // Redirect to Google OAuth2 login
     window.location.href = "http://localhost:8000/auth/oauth2/login/google";
   };
 
   const handleFacebookLogin = () => {
     setError("");
     setLoading(true);
-    // Redirect to Facebook OAuth2 login
     window.location.href = "http://localhost:8000/auth/oauth2/login/facebook";
   };
 
@@ -40,7 +36,6 @@ export default function Login() {
         <p>Sign in with your account to access the AI health assistant.</p>
       </div>
 
-      {/* Google OAuth2 Login */}
       <button
         type="button"
         onClick={handleGoogleLogin}
@@ -75,7 +70,6 @@ export default function Login() {
         Sign in with Google
       </button>
 
-      {/* Facebook OAuth2 Login */}
       <button
         type="button"
         onClick={handleFacebookLogin}
@@ -109,9 +103,6 @@ export default function Login() {
 
       {error && <div style={{ color: "red", marginTop: 16, textAlign: "center" }}>{error}</div>}
 
-      <div style={{ marginTop: 24, textAlign: "center", color: "#888", fontSize: "14px" }}>
-        <p>Your Google account information is used only for authentication.</p>
       </div>
-    </div>
   );
 }

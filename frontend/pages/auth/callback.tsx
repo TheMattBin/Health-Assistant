@@ -6,17 +6,13 @@ export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    // Handle OAuth2 callback
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
     if (token) {
       localStorage.setItem('token', token);
-      // Remove token from URL
       window.history.replaceState({}, document.title, window.location.pathname);
-      // Redirect to chat page after successful login
       router.push('/');
     } else {
-      // If no token, redirect to login page after a short delay
       setTimeout(() => {
         router.push('/login');
       }, 2000);

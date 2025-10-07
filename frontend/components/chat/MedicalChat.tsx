@@ -29,7 +29,6 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch chat sessions on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
     fetch("http://localhost:8000/chat/sessions", {
@@ -38,7 +37,6 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
       .then((res) => res.json())
       .then(async (sessions: { id: string; title: string; created_at: string }[]) => {
         if (sessions.length === 0) {
-          // Create initial session if none exist
           const response = await fetch("http://localhost:8000/chat/sessions", {
             method: "POST",
             headers: {
@@ -57,7 +55,6 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
           setChats([newSession]);
           setActiveChatId(newSession.id);
         } else {
-          // Load messages for each session
           const sessionsWithMessages = await Promise.all(
             sessions.map(async (session) => {
               const response = await fetch(`http://localhost:8000/chat/sessions/${session.id}`, {
@@ -128,9 +125,8 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
       const form = new FormData();
       form.append("question", input);
       if (file) form.append("file", file);
-      // Create a timeout controller
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       const res = await fetch("http://localhost:8000/chat/ask", {
         method: "POST",
@@ -164,7 +160,6 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
             : chat
         )
       );
-      // Save both messages to the active session
       const token = localStorage.getItem("token");
       await fetch(`http://localhost:8000/chat/sessions/${activeChatId}/messages`, {
         method: "POST",
@@ -183,7 +178,6 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
         body: JSON.stringify(aiMsg),
       });
 
-      // Update chat title if this is the first message
       const activeChat = chats.find(chat => chat.id === activeChatId);
       if (activeChat && activeChat.messages.length === 0) {
         const updatedTitle = userMsg.text.slice(0, 20) + (userMsg.text.length > 20 ? "..." : "");

@@ -9,14 +9,11 @@ from jose import JWTError, jwt
 
 router = APIRouter()
 
-# OAuth2 scheme for token extraction
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/oauth2/login/google")
 
-# JWT configuration (same as in auth.py)
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
-# Simple file-based chat history (per user) for demo
 CHAT_HISTORY_DIR = "chat_history_db"
 os.makedirs(CHAT_HISTORY_DIR, exist_ok=True)
 
@@ -33,13 +30,11 @@ class ChatSession(BaseModel):
     messages: List[ChatMessage]
 
 def get_user_id(token: str = Depends(oauth2_scheme)) -> str:
-    """Extract user ID from JWT token"""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-        # Use username as the unique identifier for chat history
         return username
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -69,7 +64,6 @@ def get_session_by_id(user_id: str, session_id: str) -> Optional[Dict[str, Any]]
 @router.get("/sessions", response_model=List[Dict[str, Any]])
 def get_chat_sessions(user_id: str = Depends(get_user_id)):
     sessions = load_sessions(user_id)
-    # Return only session metadata, not full messages
     return [
         {
             "id": session["id"],
@@ -114,7 +108,6 @@ def add_message_to_session(session_id: str, message: ChatMessage, user_id: str =
     if session_index == -1:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    # Add timestamp if not provided
     if not message.timestamp:
         message.timestamp = datetime.utcnow().isoformat()
 
@@ -123,10 +116,8 @@ def add_message_to_session(session_id: str, message: ChatMessage, user_id: str =
 
     return {"status": "ok"}
 
-# Legacy endpoints for backward compatibility
 @router.get("/history", response_model=List[Dict[str, Any]])
 def get_chat_history_legacy(user_id: str = Depends(get_user_id)):
-    """Legacy endpoint - returns all messages from all sessions flattened"""
     sessions = load_sessions(user_id)
     all_messages = []
     for session in sessions:
@@ -136,11 +127,9 @@ def get_chat_history_legacy(user_id: str = Depends(get_user_id)):
 
 @router.post("/history")
 def add_chat_message_legacy(message: Dict[str, Any], user_id: str = Depends(get_user_id)):
-    """Legacy endpoint - adds message to most recent session"""
     sessions = load_sessions(user_id)
 
     if not sessions:
-        # Create a new session if none exists
         new_session = {
             "id": f"session_{datetime.utcnow().timestamp()}",
             "title": "Legacy Chat",
@@ -149,7 +138,6 @@ def add_chat_message_legacy(message: Dict[str, Any], user_id: str = Depends(get_
         }
         sessions.append(new_session)
 
-    # Add message to the most recent session
     message["timestamp"] = datetime.utcnow().isoformat()
     sessions[-1]["messages"].append(message)
     save_sessions(user_id, sessions)

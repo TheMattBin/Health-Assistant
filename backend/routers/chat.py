@@ -7,13 +7,8 @@ from routers.model_api import run_vlm
 
 router = APIRouter()
 
-# Stub for chat endpoints
 @router.post("/ask")
 def chat_ask(file: UploadFile = File(None), question: str = Form(...)):
-    """
-    Accepts a PDF or image and a user question. Converts PDF to image if needed, then queries the VLM model.
-    Returns the model's answer.
-    """
     images = []
 
     if file:
@@ -29,9 +24,7 @@ def chat_ask(file: UploadFile = File(None), question: str = Form(...)):
             raise HTTPException(status_code=400, detail="Unsupported file type. Please upload a PDF or image.")
 
     if not images:
-        # No file provided - use AI for text-only response
         answer = run_vlm(query=question)
     else:
-        # For demo, use only the first image
         answer = run_vlm(images[0], question)
     return {"result": answer}

@@ -8,3 +8,7 @@ python-jose
 pdf2image
 accelerate
 transformers
+authlib
+starlette
+httpx
+itsdangerous

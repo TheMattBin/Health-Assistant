@@ -7,9 +7,10 @@ interface ChatHistoryPanelProps {
   activeChatId: string | null;
   onSelect: (id: string) => void;
   onNewChat: () => void;
+  LogoutButton?: React.ComponentType;
 }
 
-export default function ChatHistoryPanel({ chats, activeChatId, onSelect, onNewChat }: ChatHistoryPanelProps) {
+export default function ChatHistoryPanel({ chats, activeChatId, onSelect, onNewChat, LogoutButton }: ChatHistoryPanelProps) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHeader} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -44,6 +45,11 @@ export default function ChatHistoryPanel({ chats, activeChatId, onSelect, onNewC
           ))}
         </ul>
       </div>
+      {LogoutButton && (
+        <div className={styles.sidebarFooter}>
+          <LogoutButton />
+        </div>
+      )}
     </aside>
   );
 }

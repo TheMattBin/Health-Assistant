@@ -1,20 +1,17 @@
 import os
 import io
-import base64
-from typing import Optional
-from dotenv import load_dotenv
-
 from PIL import Image
+from dotenv import load_dotenv
+from fastapi import APIRouter, UploadFile, File, Form
+
 import torch
 from transformers import AutoProcessor, AutoModelForImageTextToText
-from fastapi import APIRouter, UploadFile, File, Form
 
 load_dotenv()
 access_token = os.getenv("HF_TOKEN")
 
 router = APIRouter()
 
-# Load model and processor once at startup
 model_id = "google/medgemma-4b-it"
 model = AutoModelForImageTextToText.from_pretrained(
     model_id,
@@ -23,16 +20,14 @@ model = AutoModelForImageTextToText.from_pretrained(
 )
 processor = AutoProcessor.from_pretrained(model_id)
 
-def run_vlm(image: Image.Image, query: str) -> str:
-    """
-    Internal utility to run MedGemma VLM on a PIL image and text query.
-    """
+def run_vlm(image: Image.Image = None, query: str = "") -> str:
+    user_content = [{"type": "text", "text": query}]
+    if image:
+        user_content.append({"type": "image", "image": image})
+
     messages = [
         {"role": "system", "content": [{"type": "text", "text": "You are an expert radiologist."}]},
-        {"role": "user", "content": [
-            {"type": "text", "text": query},
-            {"type": "image", "image": image}
-        ]}
+        {"role": "user", "content": user_content}
     ]
     inputs = processor.apply_chat_template(
         messages, add_generation_prompt=True, tokenize=True,
@@ -45,7 +40,6 @@ def run_vlm(image: Image.Image, query: str) -> str:
     decoded = processor.decode(generation, skip_special_tokens=True)
     return decoded
 
-# Optionally keep the /vlm-query endpoint for direct use, but main use is internal
 @router.post("/vlm-query")
 def vlm_query(
     image_file: UploadFile = File(...),

@@ -5,8 +5,16 @@ from fastapi.security import OAuth2PasswordBearer
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from pydantic import BaseModel
+from jose import JWTError, jwt
 
 router = APIRouter()
+
+# OAuth2 scheme for token extraction
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/oauth2/login/google")
+
+# JWT configuration (same as in auth.py)
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 # Simple file-based chat history (per user) for demo
 CHAT_HISTORY_DIR = "chat_history_db"
@@ -24,9 +32,17 @@ class ChatSession(BaseModel):
     created_at: str
     messages: List[ChatMessage]
 
-def get_user_id(request: Request) -> str:
-    # For demo, use a fixed user or extract from JWT in production
-    return "demo_user"
+def get_user_id(token: str = Depends(oauth2_scheme)) -> str:
+    """Extract user ID from JWT token"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        # Use username as the unique identifier for chat history
+        return username
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 def get_history_path(user_id: str) -> str:
     return os.path.join(CHAT_HISTORY_DIR, f"{user_id}.json")
@@ -51,8 +67,7 @@ def get_session_by_id(user_id: str, session_id: str) -> Optional[Dict[str, Any]]
     return None
 
 @router.get("/sessions", response_model=List[Dict[str, Any]])
-def get_chat_sessions(request: Request):
-    user_id = get_user_id(request)
+def get_chat_sessions(user_id: str = Depends(get_user_id)):
     sessions = load_sessions(user_id)
     # Return only session metadata, not full messages
     return [
@@ -65,16 +80,14 @@ def get_chat_sessions(request: Request):
     ]
 
 @router.get("/sessions/{session_id}", response_model=Dict[str, Any])
-def get_chat_session(request: Request, session_id: str):
-    user_id = get_user_id(request)
+def get_chat_session(session_id: str, user_id: str = Depends(get_user_id)):
     session = get_session_by_id(user_id, session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     return session
 
 @router.post("/sessions")
-def create_chat_session(request: Request, session_data: Dict[str, str]):
-    user_id = get_user_id(request)
+def create_chat_session(session_data: Dict[str, str], user_id: str = Depends(get_user_id)):
     sessions = load_sessions(user_id)
 
     new_session = {
@@ -89,8 +102,7 @@ def create_chat_session(request: Request, session_data: Dict[str, str]):
     return {"session_id": new_session["id"]}
 
 @router.post("/sessions/{session_id}/messages")
-def add_message_to_session(request: Request, session_id: str, message: ChatMessage):
-    user_id = get_user_id(request)
+def add_message_to_session(session_id: str, message: ChatMessage, user_id: str = Depends(get_user_id)):
     sessions = load_sessions(user_id)
 
     session_index = -1
@@ -113,9 +125,8 @@ def add_message_to_session(request: Request, session_id: str, message: ChatMessa
 
 # Legacy endpoints for backward compatibility
 @router.get("/history", response_model=List[Dict[str, Any]])
-def get_chat_history_legacy(request: Request):
+def get_chat_history_legacy(user_id: str = Depends(get_user_id)):
     """Legacy endpoint - returns all messages from all sessions flattened"""
-    user_id = get_user_id(request)
     sessions = load_sessions(user_id)
     all_messages = []
     for session in sessions:
@@ -124,9 +135,8 @@ def get_chat_history_legacy(request: Request):
     return all_messages
 
 @router.post("/history")
-def add_chat_message_legacy(request: Request, message: Dict[str, Any]):
+def add_chat_message_legacy(message: Dict[str, Any], user_id: str = Depends(get_user_id)):
     """Legacy endpoint - adds message to most recent session"""
-    user_id = get_user_id(request)
     sessions = load_sessions(user_id)
 
     if not sessions:

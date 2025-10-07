@@ -31,14 +31,20 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
 
   // Fetch chat sessions on mount
   useEffect(() => {
-    fetch("http://localhost:8000/chat/sessions")
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:8000/chat/sessions", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then((res) => res.json())
       .then(async (sessions: { id: string; title: string; created_at: string }[]) => {
         if (sessions.length === 0) {
           // Create initial session if none exist
           const response = await fetch("http://localhost:8000/chat/sessions", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
             body: JSON.stringify({ title: "New Chat" }),
           });
           const result = await response.json();
@@ -54,7 +60,9 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
           // Load messages for each session
           const sessionsWithMessages = await Promise.all(
             sessions.map(async (session) => {
-              const response = await fetch(`http://localhost:8000/chat/sessions/${session.id}`);
+              const response = await fetch(`http://localhost:8000/chat/sessions/${session.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
               const sessionData = await response.json();
               return {
                 ...session,
@@ -77,9 +85,13 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
 
   const handleNewChat = async () => {
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:8000/chat/sessions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ title: "New Chat" }),
       });
       const result = await response.json();
@@ -153,14 +165,21 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
         )
       );
       // Save both messages to the active session
+      const token = localStorage.getItem("token");
       await fetch(`http://localhost:8000/chat/sessions/${activeChatId}/messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(userMsg),
       });
       await fetch(`http://localhost:8000/chat/sessions/${activeChatId}/messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(aiMsg),
       });
 

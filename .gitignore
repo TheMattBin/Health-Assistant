@@ -65,7 +65,7 @@ Pipfile.lock
 
 # dotenv
 .env
-.env.*
+# .env.*
 
 # Next.js/React/TypeScript
 node_modules/

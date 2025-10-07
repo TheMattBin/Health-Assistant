@@ -33,8 +33,10 @@ export default function Home() {
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect to login
+    return null;
   }
 
   return <MedicalChat LogoutButton={Logout} />;
 }
+
+export const dynamic = 'force-dynamic'

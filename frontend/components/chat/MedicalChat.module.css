@@ -180,6 +180,30 @@
   margin-top: 6px;
 }
 
+.filePreview {
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #181a20;
+  border: 1px solid #333;
+  max-width: 300px;
+}
+
+.imagePreview {
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
+  display: block;
+}
+
+.fileIcon {
+  padding: 16px;
+  text-align: center;
+  font-size: 24px;
+  background: #181a20;
+}
+
 .inputBar {
   display: flex;
   align-items: center;

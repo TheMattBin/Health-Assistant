@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from routers import auth, health_data, chat, file_upload, model_api, chat_history, oauth2
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="OpenHealth-Inspired AI Health Assistant")
 
@@ -17,6 +18,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve uploaded files
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(auth.router, prefix="/auth")
 app.include_router(oauth2.router, prefix="/auth/oauth2")

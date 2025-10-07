@@ -6,6 +6,7 @@ interface ChatMessage {
   sender: "user" | "ai";
   text: string;
   fileName?: string;
+  filePath?: string;
   timestamp?: string;
 }
 
@@ -54,6 +55,20 @@ export default function ChatMainPanel({ messages, input, setInput, file, setFile
               {msg.fileName && (
                 <div className={styles.chatFile}>
                   📎 {msg.fileName}
+                  {msg.filePath && (
+                    <div className={styles.filePreview}>
+                      {msg.fileName.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/) ? (
+                        <img
+                          src={`http://localhost:8000/${msg.filePath}`}
+                          alt={msg.fileName}
+                          className={styles.imagePreview}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className={styles.fileIcon}>📄</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
               {msg.timestamp && (

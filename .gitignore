@@ -90,3 +90,6 @@ Thumbs.db
 *.json
 CLAUDE.MD
 chat_history_db/
+
+# storage for user-uploaded files
+uploads/

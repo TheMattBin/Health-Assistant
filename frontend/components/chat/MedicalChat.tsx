@@ -8,6 +8,7 @@ interface ChatMessage {
   sender: "user" | "ai";
   text: string;
   fileName?: string;
+  filePath?: string;
   timestamp?: string;
 }
 
@@ -144,6 +145,10 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
           text: data.result,
           timestamp: new Date().toISOString(),
         };
+        // Update user message with file path from response
+        if (data.filePath) {
+          userMsg.filePath = data.filePath;
+        }
       } else {
         const errorText = await res.text();
         console.error("Backend error:", res.status, errorText);

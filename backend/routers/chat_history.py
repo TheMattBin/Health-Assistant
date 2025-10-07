@@ -21,6 +21,7 @@ class ChatMessage(BaseModel):
     sender: str
     text: str
     fileName: Optional[str] = None
+    filePath: Optional[str] = None
     timestamp: Optional[str] = None
 
 class ChatSession(BaseModel):
@@ -143,3 +144,36 @@ def add_chat_message_legacy(message: Dict[str, Any], user_id: str = Depends(get_
     save_sessions(user_id, sessions)
 
     return {"status": "ok"}
+
+@router.delete("/sessions/{session_id}")
+def delete_chat_session(session_id: str, user_id: str = Depends(get_user_id)):
+    from utils.file_storage import cleanup_user_files
+
+    sessions = load_sessions(user_id)
+
+    session_index = -1
+    session_to_delete = None
+    for i, session in enumerate(sessions):
+        if session["id"] == session_id:
+            session_index = i
+            session_to_delete = session
+            break
+
+    if session_index == -1:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Collect file paths to keep (from other sessions)
+    files_to_keep = []
+    for session in sessions:
+        if session["id"] != session_id:
+            for message in session.get("messages", []):
+                if message.get("filePath"):
+                    files_to_keep.append(message["filePath"])
+
+    # Cleanup unused files
+    deleted_count = cleanup_user_files(user_id, files_to_keep)
+
+    del sessions[session_index]
+    save_sessions(user_id, sessions)
+
+    return {"status": "ok", "files_deleted": deleted_count}

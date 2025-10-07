@@ -1,0 +1,167 @@
+.markdownContainer {
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.aiMessage {
+  color: #f5f6fa;
+}
+
+.userMessage {
+  color: #fff;
+}
+
+/* Text formatting */
+.bold {
+  font-weight: 600;
+  color: #4fc3f7;
+}
+
+.italic {
+  font-style: italic;
+}
+
+/* Headers */
+.h1 {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 0.5em 0 0.3em 0;
+  color: #4fc3f7;
+  border-bottom: 2px solid #4fc3f7;
+  padding-bottom: 0.2em;
+}
+
+.h2 {
+  font-size: 1.3em;
+  font-weight: 600;
+  margin: 0.4em 0 0.2em 0;
+  color: #29b6f6;
+}
+
+.h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 0.3em 0 0.1em 0;
+  color: #03a9f4;
+}
+
+.h4 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0.3em 0 0.1em 0;
+  color: #039be5;
+}
+
+/* Lists */
+.ul {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.li {
+  margin: 0.3em 0;
+  color: #e0f7fa;
+}
+
+.li::marker {
+  color: #4fc3f7;
+  font-weight: 600;
+}
+
+/* Code */
+.inlineCode {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #ff6b6b;
+}
+
+.codeBlock {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0.8em 0;
+  overflow-x: auto;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+.codeBlock code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #e0f7fa;
+}
+
+/* Blockquotes */
+.blockquote {
+  border-left: 4px solid #4fc3f7;
+  margin: 0.8em 0;
+  padding: 0.5em 0 0.5em 1em;
+  background: rgba(79, 195, 247, 0.1);
+  color: #b3e5fc;
+  font-style: italic;
+}
+
+/* Links */
+.link {
+  color: #4fc3f7;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.link:hover {
+  border-bottom-color: #4fc3f7;
+}
+
+/* Paragraphs */
+.paragraph {
+  margin: 0.5em 0;
+  color: inherit;
+}
+
+/* User message specific styles */
+.userMessage .bold {
+  color: #fff;
+}
+
+.userMessage .h1,
+.userMessage .h2,
+.userMessage .h3,
+.userMessage .h4 {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+.userMessage .link {
+  color: #fff;
+}
+
+.userMessage .link:hover {
+  border-bottom-color: #fff;
+}
+
+.userMessage .inlineCode {
+  color: #ff9999;
+}
+
+.userMessage .blockquote {
+  border-left-color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+}
+
+.userMessage .li::marker {
+  color: #fff;
+}

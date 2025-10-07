@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import styles from "./MedicalChat.module.css";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 interface ChatMessage {
   sender: "user" | "ai";
@@ -45,7 +46,11 @@ export default function ChatMainPanel({ messages, input, setInput, file, setFile
                   : styles.chatBubble
               }
             >
-              {msg.text}
+              {msg.sender === "ai" ? (
+                <MarkdownRenderer content={msg.text} isAI={true} />
+              ) : (
+                <MarkdownRenderer content={msg.text} isAI={false} />
+              )}
               {msg.fileName && (
                 <div className={styles.chatFile}>
                   📎 {msg.fileName}

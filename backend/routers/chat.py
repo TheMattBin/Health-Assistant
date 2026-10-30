@@ -3,6 +3,7 @@ from PIL import Image
 from pdf2image import convert_from_bytes
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 
+from llm import LLMUnavailable
 from routers.model_api import run_vlm
 from routers.chat_history import get_user_id
 from utils.file_storage import save_uploaded_file
@@ -36,10 +37,13 @@ def chat_ask(file: UploadFile = File(None), question: str = Form(...), user_id: 
         # Save the original file
         file_path = save_uploaded_file(file_content, user_id, original_filename)
 
-    if not images:
-        answer = run_vlm(query=question)
-    else:
-        answer = run_vlm(images[0], question)
+    try:
+        if not images:
+            answer = run_vlm(query=question)
+        else:
+            answer = run_vlm(images[0], question)
+    except LLMUnavailable as exc:
+        raise HTTPException(status_code=503, detail=f"AI model unavailable: {exc}")
 
     return {
         "result": answer,

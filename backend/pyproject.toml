@@ -1,0 +1,41 @@
+[project]
+name = "health-assistant-backend"
+version = "0.1.0"
+description = "FastAPI backend for the AI Health Assistant"
+requires-python = ">=3.11"
+dependencies = [
+    "authlib",
+    "fastapi",
+    "httpx",
+    "itsdangerous",
+    "openai",
+    "pdf2image",
+    "pillow",
+    "pymupdf",
+    "python-dotenv",
+    "python-jose",
+    "python-multipart",
+    "starlette",
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+# MedGemma on your own GPU: `uv sync --extra local` and LLM_PROVIDER=local
+local = [
+    "accelerate",
+    "torch",
+    "transformers",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
+[tool.uv]
+# An application, not a library: don't build/install the backend itself.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

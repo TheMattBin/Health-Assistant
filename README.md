@@ -1,9 +1,9 @@
 # AI Health Assistant
 
-A modern, scalable AI Health Assistant application featuring a Python FastAPI backend and Next.js/TypeScript frontend. The application provides medical AI chat functionality using Hugging Face's MedGemma model with robust file upload capabilities and JWT authentication.
+A modern, scalable AI Health Assistant application featuring a Python FastAPI backend and Next.js/TypeScript frontend. The application provides medical AI chat functionality through hosted vision-language models on OpenRouter (no GPU needed), with Google's MedGemma available as a local option, plus robust file upload capabilities and JWT authentication.
 
 ## Features
-- **AI Medical Chat**: Interactive chat with MedGemma-4b model for medical queries
+- **AI Medical Chat**: Interactive chat for medical queries via OpenRouter (with automatic model fallback) or a local MedGemma-4b
 - **File Upload Support**: Upload and analyze medical documents (PDFs, images)
 - **Persistent Chat History**: Organized sessions with image storage and retrieval
 - **Scalable File Storage**: User-specific upload directory with automatic cleanup
@@ -25,9 +25,10 @@ A modern, scalable AI Health Assistant application featuring a Python FastAPI ba
                                                 │
                                                 ▼
                                      ┌─────────────────┐
-                                     │  Hugging Face   │
+                                     │  LLM provider   │
+                                     │  OpenRouter VLM │
+                                     │  or local       │
                                      │  MedGemma-4b    │
-                                     │  (VLM Model)    │
                                      └─────────────────┘
 
 File Storage Structure:
@@ -48,16 +49,18 @@ chat_history_db/
 ### Prerequisites
 - Docker & Docker Compose
 - Node.js 18+ (for frontend dev)
-- Python 3.10+ (for backend dev)
-- Hugging Face API token (for MedGemma model)
+- Python 3.11+ and [uv](https://docs.astral.sh/uv/) (for backend dev)
+- An [OpenRouter API key](https://openrouter.ai/keys). Free models work
+- Optional: a Hugging Face token and a GPU, to run MedGemma locally instead
 
 ### Environment Setup
 1. **Create a `.env` file in `backend/`:**
    ```
-   HF_TOKEN=your_hugging_face_token_here
+   OPENROUTER_API_KEY=your_openrouter_api_key_here
    SECRET_KEY=your-secret-key-change-in-production
    ALGORITHM=HS256
    ```
+   See `backend/.env.example` for all options. For Docker, put the same values in the root `.env`.
 
 2. **Clone the repository:**
    ```bash
@@ -77,8 +80,8 @@ docker-compose up --build
 **Backend:**
 ```bash
 cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
+uv sync
+uv run uvicorn main:app --reload
 ```
 
 **Frontend:**
@@ -92,6 +95,44 @@ npm run dev
 - **Frontend:** http://localhost:3000
 - **Backend API:** http://localhost:8000
 - **API Documentation:** http://localhost:8000/docs
+- **Health Check:** http://localhost:8000/health
+
+### AI Model Configuration
+The backend picks its model provider from `LLM_PROVIDER`:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `LLM_PROVIDER` | `openrouter` | `openrouter` (hosted) or `local` (MedGemma via transformers) |
+| `OPENROUTER_API_KEY` | - | Required for `openrouter`. Without it `/chat/ask` returns 503 |
+| `OPENROUTER_MODEL` | `nvidia/nemotron-3.5-super-vl:free` | Primary model. It must accept images |
+| `OPENROUTER_FALLBACK_MODELS` | `google/gemma-4-31b-it:free` | Comma-separated. These are tried in order if the primary is rate-limited or down |
+| `LLM_TIMEOUT_S` | `25` | Per-model timeout. The frontend gives up after 60s |
+| `LLM_MAX_TOKENS` | `1000` | Reply length cap |
+
+OpenRouter rate-limits `:free` models, and which models are free changes often. If you hit limits, add another vision model to `OPENROUTER_FALLBACK_MODELS`.
+
+**Running MedGemma locally:** install the optional dependencies (torch, transformers, accelerate), accept the model terms on Hugging Face, and set `HF_TOKEN`:
+```bash
+cd backend
+uv sync --extra local
+LLM_PROVIDER=local uv run uvicorn main:app
+```
+The default setup never imports torch, so it runs on any machine.
+
+### Tests
+```bash
+cd backend
+uv run pytest
+```
+The tests use a fake model, so they need no API key or network.
+
+### Dependencies
+`backend/pyproject.toml` and `uv.lock` are the source of truth. The Docker image still installs from `requirements.txt`, so regenerate it after changing dependencies:
+```bash
+cd backend
+uv lock
+uv export --format requirements-txt --no-dev --no-hashes --output-file requirements.txt
+```
 
 ### Directory Structure
 ```
@@ -102,7 +143,9 @@ Health-Assistant/
 │   │   ├── chat.py           # Chat functionality
 │   │   ├── chat_history.py   # Session management
 │   │   ├── file_upload.py    # File handling
-│   │   └── model_api.py      # AI model integration
+│   │   └── model_api.py      # Prompt + call into the LLM provider
+│   ├── llm/                  # LLM providers: OpenRouter (default), local MedGemma
+│   ├── tests/                # pytest suite (fake model, no network)
 │   ├── utils/                # Utility functions
 │   │   └── file_storage.py   # File storage management
 │   ├── uploads/              # User file storage
@@ -120,7 +163,7 @@ Health-Assistant/
 ## Extending the System
 
 ### Adding New Features
-- **New AI Models**: Add to `backend/routers/model_api.py`
+- **New AI Models**: Add a provider in `backend/llm/` and select it in `llm/__init__.py`
 - **File Types**: Update `backend/routers/file_upload.py`
 - **UI Components**: Create in `frontend/components/`
 - **Authentication**: Extend `backend/routers/auth.py`
@@ -128,7 +171,7 @@ Health-Assistant/
 ### API Integration
 - Database integration: Replace JSON storage in `chat_history.py`
 - External APIs: Add new routers in `backend/routers/`
-- Model providers: Extend `backend/routers/model_api.py`
+- Model providers: Extend `backend/llm/`
 
 ## Future Enhancements
 

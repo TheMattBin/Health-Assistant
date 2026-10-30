@@ -108,11 +108,16 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
 
   const handleSend = async () => {
     if ((!input && !file) || !activeChatId) return;
+    const question = input;
+    const attachment = file;
+    // Clear the input bar right away; the message is shown in the chat below.
+    setInput("");
+    setFile(null);
     setLoading(true);
     const userMsg: ChatMessage = {
       sender: "user",
-      text: input,
-      fileName: file?.name,
+      text: question,
+      fileName: attachment?.name,
       timestamp: new Date().toISOString(),
     };
     setChats((prev) =>
@@ -124,8 +129,8 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
     );
     try {
       const form = new FormData();
-      form.append("question", input);
-      if (file) form.append("file", file);
+      form.append("question", question);
+      if (attachment) form.append("file", attachment);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
 
@@ -215,8 +220,6 @@ export default function MedicalChat({ LogoutButton }: MedicalChatProps) {
         )
       );
     } finally {
-      setInput("");
-      setFile(null);
       setLoading(false);
     }
   };

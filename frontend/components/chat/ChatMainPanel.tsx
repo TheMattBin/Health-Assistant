@@ -28,6 +28,11 @@ export default function ChatMainPanel({ messages, input, setInput, file, setFile
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Reset the native file input too, so the same file can be attached again.
+  useEffect(() => {
+    if (!file && fileInputRef.current) fileInputRef.current.value = "";
+  }, [file]);
+
   return (
     <main className={styles.main}>
       <div className={styles.chatArea}>
